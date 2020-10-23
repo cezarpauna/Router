@@ -1,0 +1,43 @@
+PAUNA CEZAR
+324CB
+
+! pe local imi trec toate testele, mai putin cele pentru arp
+
+1. Dirijare
+	Parsarea tabelei de rutare este evidenta, se citeste din fisier
+	si se stocheaza intr-un vecotr de structuri de tip route_table_entry.
+	Se primeste packet-ul, verific checksum cu functia din laboratorul 4,
+	verific TTL sa nu fie 0, daca ambele conditii au loc, procesul
+	de dirijare poate incepe
+	Folosesc functia get_best_route care intoarce un element din
+	tabela de rutare. Este o cautare binara dupa prefix, apoi dupa
+	masca. In primul rand, se sorteaza tabela de rutare crescator
+	dupa prefix si descrescator dupa masca. Astfel, atunci cand voi
+	efectua cautarea binare, ma voi uita dupa prefix. Atunci cand s-a
+	gasit un prefix, verific daca este cea mai mare masca, decrementand
+	index-ul. Masca cea mai mare se poate afla doar pe pozitii superioare
+	din pricina modului in care am sortat tabela de rutare. Intorc apoi
+	structura sau NULL daca nu s-a gasit.
+	Revenind la dirijare, apelez get_best_route pentru a gasit next_hop
+	(se apeleaza cu parametru adresa de destinatie).
+	Daca functia intoarce NULL atunci inseamna ca e o destinatie necunoscuta
+	asa ca trimit un packet ICMP_DEST_UNREACH
+	daca se gaseste, decrementez TTL, calculez checksum si completez
+	headerul Ethernet astfel:
+	-> folosesc functia get_interface_mac pentru a pune in campul
+	   ether_shost adresa mac a routerului de pe acea interfata pe care
+	   voi trimite, nu de pe care e packet-ul
+	-> in ether_dhost se pune mac-ul gasit din apelul functiei
+ 	   get_arp_entry apelata cu parametrul next_hop
+	Dupa trimit mai departe
+2. ICMP
+	Daca primesc un packet de tip ICMP request care este adresat
+	router-ului, generez un reply pentru host. Construiesc un packet
+	icmp si completez toate campurile cum am invatat la laborator.
+	Daca TTL este egal 0 generez un packet de tip ICMP_TIME_EXCEEDED,
+	la fel ca la celelalte.
+	Pentru get_best_route() intoarce NULL generez un packet de tip
+	ICMP_DEST_UNREACH
+3. ARP
+	Am incercat sa implementez protocolul ARP, mi-a iesit o parte, nu cred
+	ca mai era mult de lucru la el, dar asta este.
